@@ -95,5 +95,11 @@ namespace ShipIt.Controllers
 
             _stockRepository.RemoveStock(request.WarehouseId, lineItems);
         }
+
+        //foreach (var product in products) {
+                //sum up the weight of all the products inside the request/order-list that are available
+                //divide the sum by 2000 to understand how many trucks we need to ship the products
+         //   }
+
     }
 }
