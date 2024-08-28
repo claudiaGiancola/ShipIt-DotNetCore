@@ -43,6 +43,7 @@ namespace ShipIt.Controllers
             var lineItems = new List<StockAlteration>();
             var productIds = new List<int>();
             var errors = new List<string>();
+            var weights = new List<float>();
 
             foreach (var orderLine in request.OrderLines)
             {
@@ -55,6 +56,7 @@ namespace ShipIt.Controllers
                     var product = products[orderLine.gtin];
                     lineItems.Add(new StockAlteration(product.Id, orderLine.quantity));
                     productIds.Add(product.Id);
+                    weights.Add(product.Weight);
                 }
             }
 
@@ -67,11 +69,13 @@ namespace ShipIt.Controllers
 
             var orderLines = request.OrderLines.ToList();
             errors = new List<string>();
+            float totalWeight = 0;
 
             for (int i = 0; i < lineItems.Count; i++)
             {
                 var lineItem = lineItems[i];
                 var orderLine = orderLines[i];
+                var weight = weights[i];
 
                 if (!stock.ContainsKey(lineItem.ProductId))
                 {
@@ -86,6 +90,8 @@ namespace ShipIt.Controllers
                         string.Format("Product: {0}, stock held: {1}, stock to remove: {2}", orderLine.gtin, item.held,
                             lineItem.Quantity));
                 }
+
+                totalWeight = totalWeight + weight;
             }
 
             if (errors.Count > 0)
@@ -94,6 +100,7 @@ namespace ShipIt.Controllers
             }
 
             _stockRepository.RemoveStock(request.WarehouseId, lineItems);
+            
         }
 
         //foreach (var product in products) {
