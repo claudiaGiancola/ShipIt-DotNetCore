@@ -7,8 +7,8 @@ VSCode should automatically set up and install everything you'll need apart from
 ### Setting up the Database.
 Create 2 new postgres databases - one for the main program and one for our test database.
 
-`createdb -h localhost -p 5432 -U postgres <ShiptItDb>`
-`createdb -h localhost -p 5432 -U postgres <ShiptItDbTest>`
+`createdb -h localhost -p 5432 -U postgres <ShipItDb>`
+`createdb -h localhost -p 5432 -U postgres <ShipItDbTest>`
 (run this in the CLI in the directory C:/Program Files/PostgreSQL/16/bin)
 
 Ask a team member for a dump of the production databases to create and populate your tables.
