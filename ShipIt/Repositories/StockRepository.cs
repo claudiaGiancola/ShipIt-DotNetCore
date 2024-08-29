@@ -14,6 +14,7 @@ namespace ShipIt.Repositories
         int GetTrackedItemsCount();
         int GetStockHeldSum();
         IEnumerable<StockDataModel> GetStockByWarehouseId(int id);
+        IEnumerable<ProductDataModel> GetProductsByWarehouseId(int id);
         Dictionary<int, StockDataModel> GetStockByWarehouseAndProductIds(int warehouseId, List<int> productIds);
         void RemoveStock(int warehouseId, List<StockAlteration> lineItems);
         void AddStock(int warehouseId, List<StockAlteration> lineItems);
@@ -36,6 +37,7 @@ namespace ShipIt.Repositories
 
         public IEnumerable<StockDataModel> GetStockByWarehouseId(int id)
         {
+            
             string sql = "SELECT p_id, hld, w_id FROM stock WHERE w_id = @w_id";
             var parameter = new NpgsqlParameter("@w_id", id);
             string noProductWithIdErrorMessage = string.Format("No stock found with w_id: {0}", id);
@@ -49,6 +51,34 @@ namespace ShipIt.Repositories
             }
         }
 
+        public IEnumerable<ProductDataModel> GetProductsByWarehouseId(int id)
+        {
+            
+            // string sql = "SELECT p_id, hld, w_id FROM stock WHERE w_id = @w_id";
+
+            string sql = "SELECT * FROM gtin as g JOIN stock as s ON g.p_id = s.p_id WHERE w_id = @w_id AND s.hld < g.l_th AND g.ds != 0";
+
+
+            //SELECT p_id, hId, w_id, l_th FROM gtin+stock WHERE w_id = @w_id + (stock_hId < pId_l_th && pId_ds != 0)
+
+            //SELECT *
+            //FROM gtin as g  
+            //JOIN stock as s 
+            //ON g.p_id = s.p_id
+            //WHERE w_id = @w_id AND s.hId < g.l_th AND g.ds != 0
+
+            var parameter = new NpgsqlParameter("@w_id", id);
+            string noProductWithIdErrorMessage = string.Format("No stock found with w_id: {0}", id);
+            try
+            {
+                return base.RunGetQuery(sql, reader => new ProductDataModel(reader), noProductWithIdErrorMessage, parameter).ToList();
+            }
+            catch (NoSuchEntityException)
+            {
+                return new List<ProductDataModel>();
+            }
+        }
+
         public Dictionary<int, StockDataModel> GetStockByWarehouseAndProductIds(int warehouseId, List<int> productIds)
         {
             string sql = string.Format("SELECT p_id, hld, w_id FROM stock WHERE w_id = @w_id AND p_id IN ({0})",
@@ -59,7 +89,7 @@ namespace ShipIt.Repositories
             var stock = base.RunGetQuery(sql, reader => new StockDataModel(reader), noProductWithIdErrorMessage, parameter);
             return stock.ToDictionary(s => s.ProductId, s => s);
         }
-            
+
         public void AddStock(int warehouseId, List<StockAlteration> lineItems)
         {
             var parametersList = new List<NpgsqlParameter[]>();
@@ -79,9 +109,9 @@ namespace ShipIt.Repositories
             var recordsAffected = new List<int>();
             foreach (var parameters in parametersList)
             {
-                 recordsAffected.Add(
-                     RunSingleQueryAndReturnRecordsAffected(sql, parameters)
-                 );
+                recordsAffected.Add(
+                    RunSingleQueryAndReturnRecordsAffected(sql, parameters)
+                );
             }
 
             string errorMessage = null;

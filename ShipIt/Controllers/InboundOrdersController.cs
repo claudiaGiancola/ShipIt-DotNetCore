@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using ShipIt.Exceptions;
 using ShipIt.Models.ApiModels;
 using ShipIt.Models.DataModels;
@@ -36,32 +37,70 @@ namespace ShipIt.Controllers
 
             Log.Debug(String.Format("Found operations manager: {0}", operationsManager));
 
-            var allStock = _stockRepository.GetStockByWarehouseId(warehouseId);
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            // var allStock = _stockRepository.GetStockByWarehouseId(warehouseId);
+            var allProduct = _stockRepository.GetProductsByWarehouseId(warehouseId);
 
-            Dictionary<Company, List<InboundOrderLine>> orderlinesByCompany = new Dictionary<Company, List<InboundOrderLine>>();
-            foreach (var stock in allStock)
+            //JUST TO TEST SQL JOIN TABLES
+            // not sure this is working "AND s.hld < g.l_th AND g.ds != 0" maybe? would need to check the warehouseId
+            int i = 0;
+            foreach (var product in allProduct)
             {
-                Product product = new Product(_productRepository.GetProductById(stock.ProductId));
-                if(stock.held < product.LowerThreshold && !product.Discontinued)
+                i++;
+                Console.WriteLine($"ID:{product.Id}, gtin: {product.Gtin}, gcp: {product.Gcp}, name: {product.Name}, weight: {product.Weight}, l_th: {product.LowerThreshold}, ds: {product.Discontinued}, min_qt: {product.MinimumOrderQuantity}");
+                if (i == 10)
                 {
-                    Company company = new Company(_companyRepository.GetCompany(product.Gcp));
-
-                    var orderQuantity = Math.Max(product.LowerThreshold * 3 - stock.held, product.MinimumOrderQuantity);
-
-                    if (!orderlinesByCompany.ContainsKey(company))
-                    {
-                        orderlinesByCompany.Add(company, new List<InboundOrderLine>());
-                    }
-
-                    orderlinesByCompany[company].Add( 
-                        new InboundOrderLine()
-                        {
-                            gtin = product.Gtin,
-                            name = product.Name,
-                            quantity = orderQuantity
-                        });
+                    break;
                 }
             }
+            //
+
+            watch.Stop();
+            var elapsedTime = watch.ElapsedMilliseconds;
+            Console.WriteLine("elapsed time for GetStockByWarehouseId:{0}", elapsedTime);
+
+            Dictionary<Company, List<InboundOrderLine>> orderlinesByCompany = new Dictionary<Company, List<InboundOrderLine>>();
+            watch.Start();
+
+            //List of products that are in the ware house = allStock
+            //convert AllStock into product_list = List<Product>
+
+            // int i = 0;
+
+            // foreach (var product in allProduct)
+            // {
+            //foreach (var stock in allStock)
+            //Product product = new Product(_productRepository.GetProductById(stock.ProductId));
+            //product = product_list[i];
+
+            //StockDataModel stock = allStock[product];
+
+            //if(stock.held < product.LowerThreshold && !product.Discontinued)
+            //{
+            // Company company = new Company(_companyRepository.GetCompany(product.Gcp));
+
+            // var orderQuantity = Math.Max(product.LowerThreshold * 3 - stock.held, product.MinimumOrderQuantity);
+
+            // if (!orderlinesByCompany.ContainsKey(company))
+            // {
+            //     orderlinesByCompany.Add(company, new List<InboundOrderLine>());
+            // }
+
+            // orderlinesByCompany[company].Add( 
+            //     new InboundOrderLine()
+            //     {
+            //         gtin = product.Gtin,
+            //         name = product.Name,
+            //         quantity = orderQuantity
+            //     });
+            //}
+            //     i++;
+            // }
+
+            watch.Stop();
+            elapsedTime = watch.ElapsedMilliseconds;
+            Console.WriteLine("elapsed time for Loop containing GetProductById and GetCompany:{0}", elapsedTime);
+
 
             Log.Debug(String.Format("Constructed order lines: {0}", orderlinesByCompany));
 

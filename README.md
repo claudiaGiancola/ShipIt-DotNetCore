@@ -37,4 +37,8 @@ Once set up, simply run `dotnet run` in the ShipIt directory.
 To run the tests you should be able to run `dotnet test` in the ShipItTests directory.
 
 ## Deploying to Production
-TODO
+
+Create indexes for your tables using
+`psql <yourDbName> <yourUsername>` (e.g. `psql PostItDb postgres`)
+This allows you to write SQL commands in the CLI (always remember the semicolon at the end of each line)
+Run `CREATE INDEX idx_YourNewIndex ON <yourTable> (<yourColumn>);`
