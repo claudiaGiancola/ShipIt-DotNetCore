@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using ShipIt.Controllers;
 using ShipIt.Exceptions;
@@ -197,6 +198,32 @@ namespace ShipItTest
             {
                 Assert.IsTrue(e.Message.Contains(GTIN));
             }
+        }
+
+        [Test]
+        public void TestOutboundOrderTrucksQuantity()
+        {
+            onSetUp();
+            stockRepository.AddStock(WAREHOUSE_ID, new List<StockAlteration>() { new StockAlteration(productId, 20) });
+            var outboundOrder = new OutboundOrderRequestModel()
+            {
+                WarehouseId = WAREHOUSE_ID,
+                OrderLines = new List<OrderLine>()
+                {
+                    new OrderLine()
+                    {
+                        gtin = GTIN,
+                        quantity = 18
+                    }
+                }
+            };
+
+            var response = outboundOrderController.Post(outboundOrder);
+
+            var stock = stockRepository.GetStockByWarehouseAndProductIds(WAREHOUSE_ID, new List<int>() { productId })[productId];
+            
+            Assert.AreEqual(stock.held, 2);
+            Assert.AreEqual(response.TrucksQuantity, 3);
         }
     }
 }

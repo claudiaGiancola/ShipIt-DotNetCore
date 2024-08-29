@@ -1,8 +1,8 @@
 ﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
- using Microsoft.AspNetCore.Mvc;
- using ShipIt.Exceptions;
+using Microsoft.AspNetCore.Mvc;
+using ShipIt.Exceptions;
 using ShipIt.Models.ApiModels;
 using ShipIt.Repositories;
 
@@ -23,7 +23,7 @@ namespace ShipIt.Controllers
         }
 
         [HttpPost("")]
-        public void Post([FromBody] OutboundOrderRequestModel request)
+        public OutboundOrderResponse Post([FromBody] OutboundOrderRequestModel request)
         {
             Log.Info(String.Format("Processing outbound order: {0}", request));
 
@@ -91,7 +91,8 @@ namespace ShipIt.Controllers
                             lineItem.Quantity));
                 }
 
-                totalWeight = totalWeight + weight;
+                totalWeight += weight*lineItem.Quantity;
+            
             }
 
             if (errors.Count > 0)
@@ -101,12 +102,10 @@ namespace ShipIt.Controllers
 
             _stockRepository.RemoveStock(request.WarehouseId, lineItems);
             
+            
+
+            return new OutboundOrderResponse(totalWeight);
+        
         }
-
-        //foreach (var product in products) {
-                //sum up the weight of all the products inside the request/order-list that are available
-                //divide the sum by 2000 to understand how many trucks we need to ship the products
-         //   }
-
     }
 }
