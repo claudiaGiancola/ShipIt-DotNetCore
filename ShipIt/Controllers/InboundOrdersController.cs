@@ -46,15 +46,21 @@ namespace ShipIt.Controllers
             Console.WriteLine("elapsed time for GetStockByWarehouseId:{0}", elapsedTime);
 
             Dictionary<Company, List<InboundOrderLine>> orderlinesByCompany = new Dictionary<Company, List<InboundOrderLine>>();
-            watch.Start();
 
 
             foreach (var product in allProduct)
             {
-                var stockHeld = allStock.ToList().Where(x => x.ProductId == product.Id);
 
-                Company company = new Company(_companyRepository.GetCompany(product.Gcp));
+                var stockHeld = allStock.ToList().Where(x => x.ProductId == product.Id);
                 
+                //needs to be improved the performances > call GetCompany outside of the loop
+                watch = System.Diagnostics.Stopwatch.StartNew();
+                Company company = new Company(_companyRepository.GetCompany(product.Gcp));
+                watch.Stop();
+                elapsedTime = watch.ElapsedMilliseconds;
+                Console.WriteLine("elapsed time for GetCompany:{0}", elapsedTime);
+
+
                 var orderQuantity = Math.Max((int)(product.LowerThreshold * 3 - stockHeld.ElementAt(0).held), product.MinimumOrderQuantity);
 
                 if (!orderlinesByCompany.ContainsKey(company))
@@ -72,9 +78,7 @@ namespace ShipIt.Controllers
 
             }
 
-            watch.Stop();
-            elapsedTime = watch.ElapsedMilliseconds;
-            Console.WriteLine("elapsed time for Loop containing GetProductById and GetCompany:{0}", elapsedTime);
+
 
 
             Log.Debug(String.Format("Constructed order lines: {0}", orderlinesByCompany));

@@ -56,16 +56,8 @@ namespace ShipIt.Repositories
             
             // string sql = "SELECT p_id, hld, w_id FROM stock WHERE w_id = @w_id";
 
-            string sql = "SELECT * FROM gtin as g JOIN stock as s ON g.p_id = s.p_id WHERE w_id = @w_id AND s.hld < g.l_th AND g.ds != 0";
+            string sql = "SELECT * FROM gtin as g JOIN stock as s ON g.p_id = s.p_id WHERE w_id = @w_id AND s.hld < g.l_th AND g.ds != 1";
 
-
-            //SELECT p_id, hId, w_id, l_th FROM gtin+stock WHERE w_id = @w_id + (stock_hId < pId_l_th && pId_ds != 0)
-
-            //SELECT *
-            //FROM gtin as g  
-            //JOIN stock as s 
-            //ON g.p_id = s.p_id
-            //WHERE w_id = @w_id AND s.hId < g.l_th AND g.ds != 0
 
             var parameter = new NpgsqlParameter("@w_id", id);
             string noProductWithIdErrorMessage = string.Format("No stock found with w_id: {0}", id);
