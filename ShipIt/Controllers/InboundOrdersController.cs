@@ -38,8 +38,10 @@ namespace ShipIt.Controllers
             Log.Debug(String.Format("Found operations manager: {0}", operationsManager));
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            var allStock = _stockRepository.GetStockByWarehouseId(warehouseId);
-            var allProduct = _stockRepository.GetProductsByWarehouseId(warehouseId);
+            var productsAndCompanies = _companyRepository.GetCompanyProductsStockByWarehouseId(warehouseId);
+            // var allStock = _stockRepository.GetStockByWarehouseId(warehouseId);
+            // var allProduct = _stockRepository.GetProductsByWarehouseId(warehouseId);
+            // var allCompanies = _companyRepository.GetCompanyByProductsAndWarehouse(warehouseId);
 
             watch.Stop();
             var elapsedTime = watch.ElapsedMilliseconds;
@@ -48,38 +50,49 @@ namespace ShipIt.Controllers
             Dictionary<Company, List<InboundOrderLine>> orderlinesByCompany = new Dictionary<Company, List<InboundOrderLine>>();
 
 
-            foreach (var product in allProduct)
+            watch = System.Diagnostics.Stopwatch.StartNew();
+
+            foreach (var item in productsAndCompanies)
             {
 
-                var stockHeld = allStock.ToList().Where(x => x.ProductId == product.Id);
-                
-                //needs to be improved the performances > call GetCompany outside of the loop
-                watch = System.Diagnostics.Stopwatch.StartNew();
-                Company company = new Company(_companyRepository.GetCompany(product.Gcp));
-                watch.Stop();
-                elapsedTime = watch.ElapsedMilliseconds;
-                Console.WriteLine("elapsed time for GetCompany:{0}", elapsedTime);
+                // var stockHeld = allStock.ToList().Where(x => x.ProductId == product.Id);
 
+                var orderQuantity = Math.Max((int)(item.LowerThreshold * 3 - item.Held), item.MinimumOrderQuantity);
 
-                var orderQuantity = Math.Max((int)(product.LowerThreshold * 3 - stockHeld.ElementAt(0).held), product.MinimumOrderQuantity);
+                // IEnumerable<CompanyDataModel> companyList = allCompanies.Where(y => y.Gcp == product.Gcp);
+                // Company company = new Company(_companyRepository.GetCompany(product.Gcp));
+                // Company company = new Company(companyList.ElementAt(0));
+
+                Company company = new Company(
+                        item.Gcp,
+                        item.CompanyName,
+                        item.Addr2,
+                        item.Addr3,
+                        item.Addr4,
+                        item.PostalCode,
+                        item.City,
+                        item.Tel,
+                        item.Mail
+                    );
 
                 if (!orderlinesByCompany.ContainsKey(company))
                 {
                     orderlinesByCompany.Add(company, new List<InboundOrderLine>());
+
                 }
 
                 orderlinesByCompany[company].Add(
                     new InboundOrderLine()
                     {
-                        gtin = product.Gtin,
-                        name = product.Name,
+                        gtin = item.Gtin,
+                        name = item.ProductName,
                         quantity = orderQuantity
                     });
-
             }
 
-
-
+            watch.Stop();
+            elapsedTime = watch.ElapsedMilliseconds;
+            Console.WriteLine("elapsed time for loop:{0}", elapsedTime);
 
             Log.Debug(String.Format("Constructed order lines: {0}", orderlinesByCompany));
 

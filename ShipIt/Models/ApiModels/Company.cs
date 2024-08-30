@@ -34,6 +34,19 @@ namespace ShipIt.Models.ApiModels
         {
         }
 
+        public Company(string gcp, string name, string addr2, string addr3, string addr4, string postalCode, string city, string tel, string mail)
+        {
+            Gcp = gcp;
+            Name = name;
+            Addr2 = addr2;
+            Addr3 = addr3;
+            Addr4 = addr4;
+            PostalCode = postalCode;
+            City = city;
+            Tel = tel;
+            Mail = mail;
+        }
+
         public override bool Equals(object obj)
         {
             if (this == obj)

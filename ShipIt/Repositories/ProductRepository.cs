@@ -13,6 +13,7 @@ namespace ShipIt.Repositories
         int GetCount();
         ProductDataModel GetProductByGtin(string gtin);
         IEnumerable<ProductDataModel> GetProductsByGtin(List<string> gtins);
+        // IEnumerable<ProductDataModel> GetProductsToRestockByWarehouseId(int id);
         ProductDataModel GetProductById(int id);
         void AddProducts(IEnumerable<ProductDataModel> products);
         void DiscontinueProductByGtin(string gtin);
@@ -51,6 +52,26 @@ namespace ShipIt.Repositories
             string noProductWithIdErrorMessage = string.Format("No products found with id of value {0}", id.ToString());
             return RunSingleGetQuery(sql, reader => new ProductDataModel(reader), noProductWithIdErrorMessage, parameter);
         }
+
+        // public IEnumerable<ProductDataModel> GetProductsToRestockByWarehouseId(int id)
+        // {
+            
+        //     // string sql = "SELECT p_id, hld, w_id FROM stock WHERE w_id = @w_id";
+
+        //     string sql = "SELECT * FROM gtin as g JOIN stock as s ON g.p_id = s.p_id WHERE w_id = @w_id AND s.hld < g.l_th AND g.ds != 1";
+
+
+        //     var parameter = new NpgsqlParameter("@w_id", id);
+        //     string noProductWithIdErrorMessage = string.Format("No stock found with w_id: {0}", id);
+        //     try
+        //     {
+        //         return base.RunGetQuery(sql, reader => new ProductDataModel(reader), noProductWithIdErrorMessage, parameter).ToList();
+        //     }
+        //     catch (NoSuchEntityException)
+        //     {
+        //         return new List<ProductDataModel>();
+        //     }
+        // }
 
         public void DiscontinueProductByGtin(string gtin)
         {

@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace ShipIt.Repositories
         int GetTrackedItemsCount();
         int GetStockHeldSum();
         IEnumerable<StockDataModel> GetStockByWarehouseId(int id);
-        IEnumerable<ProductDataModel> GetProductsByWarehouseId(int id);
+        // IEnumerable<ProductDataModel> GetProductsByWarehouseId(int id);
         Dictionary<int, StockDataModel> GetStockByWarehouseAndProductIds(int warehouseId, List<int> productIds);
         void RemoveStock(int warehouseId, List<StockAlteration> lineItems);
         void AddStock(int warehouseId, List<StockAlteration> lineItems);
@@ -51,25 +51,25 @@ namespace ShipIt.Repositories
             }
         }
 
-        public IEnumerable<ProductDataModel> GetProductsByWarehouseId(int id)
-        {
+        // public IEnumerable<ProductDataModel> GetProductsByWarehouseId(int id)
+        // {
             
-            // string sql = "SELECT p_id, hld, w_id FROM stock WHERE w_id = @w_id";
+        //     // string sql = "SELECT p_id, hld, w_id FROM stock WHERE w_id = @w_id";
 
-            string sql = "SELECT * FROM gtin as g JOIN stock as s ON g.p_id = s.p_id WHERE w_id = @w_id AND s.hld < g.l_th AND g.ds != 1";
+        //     string sql = "SELECT * FROM gtin as g JOIN stock as s ON g.p_id = s.p_id WHERE w_id = @w_id AND s.hld < g.l_th AND g.ds != 1";
 
 
-            var parameter = new NpgsqlParameter("@w_id", id);
-            string noProductWithIdErrorMessage = string.Format("No stock found with w_id: {0}", id);
-            try
-            {
-                return base.RunGetQuery(sql, reader => new ProductDataModel(reader), noProductWithIdErrorMessage, parameter).ToList();
-            }
-            catch (NoSuchEntityException)
-            {
-                return new List<ProductDataModel>();
-            }
-        }
+        //     var parameter = new NpgsqlParameter("@w_id", id);
+        //     string noProductWithIdErrorMessage = string.Format("No stock found with w_id: {0}", id);
+        //     try
+        //     {
+        //         return base.RunGetQuery(sql, reader => new ProductDataModel(reader), noProductWithIdErrorMessage, parameter).ToList();
+        //     }
+        //     catch (NoSuchEntityException)
+        //     {
+        //         return new List<ProductDataModel>();
+        //     }
+        // }
 
         public Dictionary<int, StockDataModel> GetStockByWarehouseAndProductIds(int warehouseId, List<int> productIds)
         {

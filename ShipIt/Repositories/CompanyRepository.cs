@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using Npgsql;
+using ShipIt.Exceptions;
 using ShipIt.Models.ApiModels;
 using ShipIt.Models.DataModels;
 
@@ -13,6 +14,7 @@ namespace ShipIt.Repositories
     {
         int GetCount();
         CompanyDataModel GetCompany(string gcp);
+        public IEnumerable<CompanyProductsStockDataModel> GetCompanyProductsStockByWarehouseId(int id);
         void AddCompanies(IEnumerable<Company> companies);
     }
 
@@ -33,6 +35,24 @@ namespace ShipIt.Repositories
             var parameter = new NpgsqlParameter("@gcp_cd", gcp);
             string noProductWithIdErrorMessage = string.Format("No companies found with gcp: {0}", gcp);
             return base.RunSingleGetQuery(sql, reader => new CompanyDataModel(reader), noProductWithIdErrorMessage, parameter);
+        }
+
+        public IEnumerable<CompanyProductsStockDataModel> GetCompanyProductsStockByWarehouseId(int id)
+        {
+            
+            string sql = "SELECT * FROM gcp as c JOIN gtin as p ON c.gcp_cd = p.gcp_cd JOIN stock as s ON p.p_id = s.p_id WHERE w_id = @w_id AND c.gcp_cd = p.gcp_cd AND s.hld < p.l_th AND p.ds != 1";
+
+            var parameter = new NpgsqlParameter("@w_id", id);
+            string noProductWithIdErrorMessage = string.Format("No stock found with w_id: {0}", id);
+            
+            try
+            {
+            return base.RunGetQuery(sql, reader => new CompanyProductsStockDataModel(reader), noProductWithIdErrorMessage, parameter).ToList();
+            } catch (NoSuchEntityException)
+            {
+                return new List<CompanyProductsStockDataModel>();
+            }
+
         }
 
         public void AddCompanies(IEnumerable<Company> companies)
