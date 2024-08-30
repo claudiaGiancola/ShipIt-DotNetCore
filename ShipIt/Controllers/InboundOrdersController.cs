@@ -38,22 +38,8 @@ namespace ShipIt.Controllers
             Log.Debug(String.Format("Found operations manager: {0}", operationsManager));
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            // var allStock = _stockRepository.GetStockByWarehouseId(warehouseId);
+            var allStock = _stockRepository.GetStockByWarehouseId(warehouseId);
             var allProduct = _stockRepository.GetProductsByWarehouseId(warehouseId);
-
-            //JUST TO TEST SQL JOIN TABLES
-            // not sure this is working "AND s.hld < g.l_th AND g.ds != 0" maybe? would need to check the warehouseId
-            int i = 0;
-            foreach (var product in allProduct)
-            {
-                i++;
-                Console.WriteLine($"ID:{product.Id}, gtin: {product.Gtin}, gcp: {product.Gcp}, name: {product.Name}, weight: {product.Weight}, l_th: {product.LowerThreshold}, ds: {product.Discontinued}, min_qt: {product.MinimumOrderQuantity}");
-                if (i == 10)
-                {
-                    break;
-                }
-            }
-            //
 
             watch.Stop();
             var elapsedTime = watch.ElapsedMilliseconds;
@@ -62,40 +48,29 @@ namespace ShipIt.Controllers
             Dictionary<Company, List<InboundOrderLine>> orderlinesByCompany = new Dictionary<Company, List<InboundOrderLine>>();
             watch.Start();
 
-            //List of products that are in the ware house = allStock
-            //convert AllStock into product_list = List<Product>
 
-            // int i = 0;
+            foreach (var product in allProduct)
+            {
+                var stockHeld = allStock.ToList().Where(x => x.ProductId == product.Id);
 
-            // foreach (var product in allProduct)
-            // {
-            //foreach (var stock in allStock)
-            //Product product = new Product(_productRepository.GetProductById(stock.ProductId));
-            //product = product_list[i];
+                Company company = new Company(_companyRepository.GetCompany(product.Gcp));
+                
+                var orderQuantity = Math.Max((int)(product.LowerThreshold * 3 - stockHeld.ElementAt(0).held), product.MinimumOrderQuantity);
 
-            //StockDataModel stock = allStock[product];
+                if (!orderlinesByCompany.ContainsKey(company))
+                {
+                    orderlinesByCompany.Add(company, new List<InboundOrderLine>());
+                }
 
-            //if(stock.held < product.LowerThreshold && !product.Discontinued)
-            //{
-            // Company company = new Company(_companyRepository.GetCompany(product.Gcp));
+                orderlinesByCompany[company].Add(
+                    new InboundOrderLine()
+                    {
+                        gtin = product.Gtin,
+                        name = product.Name,
+                        quantity = orderQuantity
+                    });
 
-            // var orderQuantity = Math.Max(product.LowerThreshold * 3 - stock.held, product.MinimumOrderQuantity);
-
-            // if (!orderlinesByCompany.ContainsKey(company))
-            // {
-            //     orderlinesByCompany.Add(company, new List<InboundOrderLine>());
-            // }
-
-            // orderlinesByCompany[company].Add( 
-            //     new InboundOrderLine()
-            //     {
-            //         gtin = product.Gtin,
-            //         name = product.Name,
-            //         quantity = orderQuantity
-            //     });
-            //}
-            //     i++;
-            // }
+            }
 
             watch.Stop();
             elapsedTime = watch.ElapsedMilliseconds;
